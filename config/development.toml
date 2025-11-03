@@ -1,0 +1,14 @@
+[server]
+port = 3001
+
+[app]
+name = "spotify_organizer"
+
+[db]
+host = "db"
+
+[auth]
+redirect_url = "http://127.0.0.1:3000"
+
+[auth.spotify]
+callback_url = "http://127.0.0.1:3001/api/auth/callback/spotify"

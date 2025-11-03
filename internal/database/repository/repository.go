@@ -20,14 +20,13 @@ func New(db db.DB) *Repository {
 	return &Repository{db: db}
 }
 
-// Uncomment when creating your first repository
-// func (r *Repository) queries(ctx context.Context) *sqlc.Queries {
-// 	if q, ok := ctx.Value(queryKey).(*sqlc.Queries); ok {
-// 		return q
-// 	}
-//
-// 	return r.db.Queries()
-// }
+func (r *Repository) queries(ctx context.Context) *sqlc.Queries {
+	if q, ok := ctx.Value(queryKey).(*sqlc.Queries); ok {
+		return q
+	}
+
+	return r.db.Queries()
+}
 
 func (r *Repository) WithRollback(ctx context.Context, fn func(ctx context.Context) error) error {
 	if _, ok := ctx.Value(queryKey).(*sqlc.Queries); ok {

@@ -27,9 +27,6 @@ func Init() error {
 	viper.AutomaticEnv()
 	env := GetDefaultString("app.env", "development")
 
-	// Config variables should be set in Infisical
-	// but you can overwrite them with a toml file if needed
-
 	viper.SetConfigName(env + ".toml")
 	viper.SetConfigType("toml")
 	viper.AddConfigPath("./config")

@@ -4,16 +4,18 @@ package server
 import (
 	"fmt"
 
-	"github.com/topvennie/spotify_organizer/internal/server/service"
-	"github.com/topvennie/spotify_organizer/pkg/config"
 	"github.com/gofiber/contrib/fiberzap"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/gofiber/storage/postgres/v3"
-	redisstore "github.com/gofiber/storage/redis/v3"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shareed2k/goth_fiber"
+	routers "github.com/topvennie/spotify_organizer/internal/server/api"
+	"github.com/topvennie/spotify_organizer/internal/server/middlewares"
+	"github.com/topvennie/spotify_organizer/internal/server/service"
+	"github.com/topvennie/spotify_organizer/pkg/config"
+
 	"go.uber.org/zap"
 )
 
@@ -22,7 +24,7 @@ type Server struct {
 	Addr string
 }
 
-func New(_ service.Service, pool *pgxpool.Pool) *Server {
+func New(service service.Service, pool *pgxpool.Pool) *Server {
 	// Construct app
 	app := fiber.New(fiber.Config{
 		BodyLimit:         20 * 1024 * 1024,
@@ -42,16 +44,9 @@ func New(_ service.Service, pool *pgxpool.Pool) *Server {
 	}
 
 	// Session storage
-	var sessionStore fiber.Storage
-	if !config.IsDev() {
-		sessionStore = redisstore.New(redisstore.Config{
-			URL: config.GetDefaultString("redis.url", ""),
-		})
-	} else {
-		sessionStore = postgres.New(postgres.Config{
-			DB: pool,
-		})
-	}
+	sessionStore := postgres.New(postgres.Config{
+		DB: pool,
+	})
 
 	goth_fiber.SessionStore = session.New(session.Config{
 		KeyLookup:      fmt.Sprintf("cookie:%s_session_id", config.GetString("app.name")),
@@ -61,9 +56,13 @@ func New(_ service.Service, pool *pgxpool.Pool) *Server {
 	})
 
 	// Register routes
-	_ = app.Group("/api")
+	api := app.Group("/api")
 
-	// Add new routes here
+	routers.NewAuth(api, service)
+
+	protectedAPI := api.Use(middlewares.ProtectedRoute)
+
+	routers.NewUser(protectedAPI, service)
 
 	// Static files if served in production
 	if !config.IsDev() {

@@ -3,10 +3,10 @@ package main
 import (
 	"embed"
 
-	"github.com/topvennie/spotify_organizer/pkg/config"
-	"github.com/topvennie/spotify_organizer/pkg/db"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
+	"github.com/topvennie/spotify_organizer/pkg/config"
+	"github.com/topvennie/spotify_organizer/pkg/db"
 )
 
 //go:embed db/migrations/*.sql

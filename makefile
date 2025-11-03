@@ -11,11 +11,11 @@ run:
 	@go run cmd/api/main.go
 
 watch:
-	@INFISICAL_TOKEN=$$(infisical user get token | grep "Token: " | sed -e "s/Token: //") docker compose up backend frontend
+	@docker compose up backend frontend
 	@docker compose down
 
 seed:
-	@INFISICAL_TOKEN=$$(infisical user get token | grep "Token: " | sed -e "s/Token: //") docker compose up --abort-on-container-exit --exit-code-from seed seed
+	@docker compose up --abort-on-container-exit --exit-code-from seed seed
 	@docker compose down
 
 goose:
@@ -23,14 +23,14 @@ goose:
 	@docker compose up db -d
 	@docker compose exec db bash -c 'until pg_isready -U postgres; do sleep 1; done'
 	@read -p "Action: " action; \
-	go tool goose -dir ./db/migrations postgres "user=postgres password=postgres host=localhost port=5431 dbname=spotify_organizer sslmode=disable" $$action
+	go tool goose -dir ./db/migrations postgres "user=postgres password=postgres host=localhost port=5432 dbname=spotify_organizer sslmode=disable" $$action
 	@docker compose down db
 
 migrate:
 	@docker compose down
 	@docker compose up db -d
 	@docker compose exec db bash -c 'until pg_isready -U postgres; do sleep 1; done'
-	@go tool goose -dir ./db/migrations postgres "user=postgres password=postgres host=localhost port=5431 dbname=spotify_organizer sslmode=disable" up
+	@go tool goose -dir ./db/migrations postgres "user=postgres password=postgres host=localhost port=5432 dbname=spotify_organizer sslmode=disable" up
 	@docker compose down db
 
 create-migration:
