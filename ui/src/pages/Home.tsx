@@ -39,7 +39,7 @@ export const Home = () => {
 
   return (
     <div className="flex flex-col justify-center items-center h-full pt-[10%]">
-      <Title order={1} className="text-balance font-semibold tracking-tight">
+      <Title order={1}>
         Welcome
       </Title>
       <p className="mt-6 text-pretty text-lg font-medium text-gray-500">

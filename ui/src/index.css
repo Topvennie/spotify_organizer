@@ -1,4 +1,4 @@
-@layer theme, base, mantine, components, utilities;
+@layer theme, base, mantine, components, utilities, mantine-datatable;
 
 @import 'tailwindcss';
 @import '@mantine/core/styles.layer.css';

@@ -3,6 +3,7 @@ import { createTheme } from "@mantine/core";
 export const theme = createTheme({
   fontFamily: "Inter, sans-serif",
   primaryColor: "green",
+  cursorType: "pointer",
   breakpoints: {
     xs: "36em",
     sm: "40em",
