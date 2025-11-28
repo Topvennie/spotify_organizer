@@ -90,7 +90,6 @@ func (d *Directory) Sync(ctx context.Context, userID int, roots []dto.Directory)
 
 		// It might be an update, let's check the values
 		directoryDB, ok := utils.SliceFind(directoriesDB, func(d *model.Directory) bool { return d.ID == directory.ID })
-		zap.S().Debug(*directoryDB)
 		if !ok {
 			// User gave an invalid id
 			// Unlucky for them

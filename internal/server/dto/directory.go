@@ -11,7 +11,7 @@ type Directory struct {
 	ID        int         `json:"id"`
 	Name      string      `json:"name" validate:"required"`
 	Children  []Directory `json:"children,omitzero"`
-	Playlists []Playlist  `json:"playlists" validate:"requird,min=1"`
+	Playlists []Playlist  `json:"playlists" validate:"required"`
 }
 
 func DirectoryDTO(d *model.Directory, models []*model.Directory) Directory {
