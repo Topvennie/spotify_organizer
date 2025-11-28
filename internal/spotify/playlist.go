@@ -219,11 +219,13 @@ func (c *client) playlistSaveCover(newPlaylist, oldPlaylist *model.Playlist, ima
 		return nil
 	}
 
-	// We only accept the 300 by 300 images
+	// Get the biggest image
 	var imageAPI *playlistImageAPI
+	maxWidth := -1
 	for _, i := range images {
-		if i.Width == 300 && i.Height == 300 {
+		if i.Width > maxWidth {
 			imageAPI = &i
+			maxWidth = i.Width
 		}
 	}
 	if imageAPI == nil || imageAPI.URL == "" {
