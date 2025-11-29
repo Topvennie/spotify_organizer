@@ -21,6 +21,14 @@ type DirectoryPlaylist struct {
 	PlaylistID  int32
 }
 
+type Link struct {
+	ID                int32
+	SourceDirectoryID pgtype.Int4
+	SourcePlaylistID  pgtype.Int4
+	TargetDirectoryID pgtype.Int4
+	TargetPlaylistID  pgtype.Int4
+}
+
 type Playlist struct {
 	ID            int32
 	UserID        int32

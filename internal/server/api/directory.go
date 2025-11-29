@@ -24,11 +24,11 @@ func NewDirectory(router fiber.Router, service service.Service) *Directory {
 }
 
 func (d *Directory) createRoutes() {
-	d.router.Get("/", d.get)
+	d.router.Get("/", d.getAll)
 	d.router.Post("/sync", d.sync)
 }
 
-func (d *Directory) get(c *fiber.Ctx) error {
+func (d *Directory) getAll(c *fiber.Ctx) error {
 	userID, ok := c.Locals("userID").(int)
 	if !ok {
 		return fiber.ErrUnauthorized
