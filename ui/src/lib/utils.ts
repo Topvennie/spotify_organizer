@@ -43,3 +43,12 @@ export function getUuid() {
 export function formatDate(date: Date) {
   return format(date, "eee dd MMMM, HH:mm");
 }
+
+export function debounce<T extends (...args: unknown[]) => void>(fn: T, delay: number) {
+  let timer: ReturnType<typeof setTimeout>;
+
+  return (...args: Parameters<T>): void => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}

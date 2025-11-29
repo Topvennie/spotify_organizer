@@ -20,6 +20,10 @@ const routes: Route[] = [
     title: "Directories",
     link: { to: "/directory" },
   },
+  {
+    title: "Links",
+    link: { to: "/links" },
+  }
 ];
 
 const NavLink = ({ route, closeNavbar }: { route: Route; closeNavbar?: () => void }) => {

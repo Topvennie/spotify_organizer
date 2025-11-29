@@ -30,4 +30,11 @@ export namespace API {
     children?: Directory[];
     playlists: Playlist[];
   }
+
+  export interface Link extends Base {
+    source_directory_id?: number;
+    source_playlist_id?: number;
+    target_directory_id?: number;
+    target_playlist_id?: number;
+  }
 }

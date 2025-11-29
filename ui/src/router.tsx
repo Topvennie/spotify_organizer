@@ -6,6 +6,7 @@ import { Error } from "./pages/Error";
 import { Index } from "./pages/Index";
 import { Playlists } from "./pages/Playlists";
 import { Home } from "./pages/Home";
+import { Links } from "./pages/Links";
 
 const root = createRootRouteWithContext()({
   component: App,
@@ -35,11 +36,18 @@ const directory = createRoute({
   component: Directories,
 })
 
+const link = createRoute({
+  getParentRoute: () => index,
+  path: "/links",
+  component: Links,
+})
+
 const routeTree = root.addChildren([
   index.addChildren([
     home,
     playlist,
     directory,
+    link,
   ]),
 ])
 

@@ -7,14 +7,16 @@ import { FaRegCirclePlay, FaRegFolder, FaRegFolderOpen } from "react-icons/fa6";
 import { LoadingSpinner } from "../molecules/LoadingSpinner";
 import { PlaylistCover } from "./PlaylistCover";
 
+type Type = "directory" | "playlist"
+
 interface FileIconProps {
-  isFolder: boolean;
+  type: Type;
   playlist?: Playlist;
   expanded: boolean;
 }
 
-const FileIcon = ({ playlist, isFolder, expanded }: FileIconProps) => {
-  if (!isFolder) {
+const FileIcon = ({ playlist, type, expanded }: FileIconProps) => {
+  if (type === "playlist") {
     if (playlist) return <PlaylistCover playlist={playlist} className="w-6 h-6" />
     else return <FaRegCirclePlay className="w-6" />
   }
@@ -26,11 +28,11 @@ const FileIcon = ({ playlist, isFolder, expanded }: FileIconProps) => {
   return <FaRegFolder />
 }
 
-const Leaf = ({ node, expanded, hasChildren, elementProps }: RenderTreeNodePayload) => {
+const Leaf = ({ node, expanded, elementProps }: RenderTreeNodePayload) => {
   return (
     <Group py={2} {...elementProps}>
       <div className="flex items-center gap-2">
-        <FileIcon playlist={node.nodeProps?.playlist} isFolder={hasChildren} expanded={expanded} />
+        <FileIcon playlist={node.nodeProps?.playlist} type={node.nodeProps?.type} expanded={expanded} />
         <span className="whitespace-nowrap">{node.label}</span>
       </div>
     </Group>
@@ -38,11 +40,12 @@ const Leaf = ({ node, expanded, hasChildren, elementProps }: RenderTreeNodePaylo
 }
 
 const toData = (directory: Directory): TreeNodeData => {
-  const playlists = directory.playlists.map(p => ({ label: p.name, value: p.name, nodeProps: { "playlist": p } }))
+  const playlists = directory.playlists.map(p => ({ label: p.name, value: p.name, nodeProps: { type: "playlist", playlist: p } }))
 
   return {
     label: directory.name,
     value: directory.name,
+    nodeProps: { type: "directory" },
     children: [...playlists, ...(directory.children?.map(toData) ?? [])],
   }
 }
@@ -51,7 +54,6 @@ export const PlaylistTreeView = () => {
   const { data: directories, isLoading } = useDirectoryGetAll()
 
   const data = useMemo(() => directories?.map(toData) ?? [], [directories])
-  console.log(data)
 
   if (isLoading) return <LoadingSpinner />
 

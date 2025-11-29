@@ -86,7 +86,7 @@ export const Directories = () => {
   return (
     <DndContext onDragEnd={handleDragEnd} modifiers={[restrictToWindowEdges]}>
       <div className="grid grid-cols-4 gap-8">
-        <Title order={1} className="col-span-full">Directories</Title>
+        <Title order={1} className="col-span-full text-center">Directories</Title>
 
         <div className="order-1 lg:order-2 col-span-full lg:col-span-1">
           <DirectoryPlaylistSelector playlists={playlistsAvailable ?? []} />

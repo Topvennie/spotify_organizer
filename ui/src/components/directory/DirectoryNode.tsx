@@ -19,8 +19,6 @@ export const DirectoryNode = ({ directory, onUpdate, onDelete, level }: Props) =
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(directory.name)
 
-  console.log(directory)
-
   const { isOver, setNodeRef } = useDroppable({
     id: directory.iid,
   })
@@ -77,7 +75,7 @@ export const DirectoryNode = ({ directory, onUpdate, onDelete, level }: Props) =
       <div
         onClick={handleExpand}
         style={{ marginLeft: level * 16 }}
-        className={`flex items-center justify-between rounded-md bg-gray-200 p-4 cursor-pointer ${isOver ? "brightness-75" : ""}`}
+        className={`flex items-center justify-between rounded-md bg-gray-200 hover:bg-gray-100 p-4 cursor-pointer ${isOver ? "brightness-75" : ""}`}
       >
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -93,7 +91,10 @@ export const DirectoryNode = ({ directory, onUpdate, onDelete, level }: Props) =
                 onChange={(e) => setName(e.target.value)}
               />
             ) : (
-              <span className="font-semibold">{directory.name}</span>
+              <>
+                <span className="font-semibold">{directory.name}</span>
+                <span className="text-muted">{(directory.children?.length ?? 0) + directory.playlists.length}</span>
+              </>
             )}
           </div>
           {editing ? (

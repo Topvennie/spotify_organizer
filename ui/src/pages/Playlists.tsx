@@ -22,8 +22,8 @@ export const Playlists = () => {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-between">
-        <Title order={1}>Playlists</Title>
+      <Title order={1} className="text-center">Playlists</Title>
+      <div className="self-end">
         <Switch
           checked={view == "tree"}
           onChange={handleCheckToggle}

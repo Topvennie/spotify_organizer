@@ -3,3 +3,5 @@ export interface JSON {
 }
 
 export type JSONBody = JSON;
+
+export type Side = "left" | "right"
