@@ -13,6 +13,6 @@ UPDATE directories
 SET name = $2, parent_id = $3
 WHERE id = $1;
 
--- name: DirectoryDelete :exec
+-- name: DirectoryDeleteByUser :exec
 DELETE FROM directories
-WHERE id = $1;
+WHERE user_id = $1;

@@ -1,8 +1,6 @@
 package dto
 
 import (
-	"slices"
-
 	"github.com/topvennie/spotify_organizer/internal/database/model"
 	"github.com/topvennie/spotify_organizer/pkg/utils"
 )
@@ -30,16 +28,7 @@ func DirectoryDTO(d *model.Directory, models []*model.Directory) Directory {
 	}
 }
 
-func (d Directory) ToModel(userID int, dtos []Directory) *model.Directory {
-	parentID := 0
-
-	parent, ok := utils.SliceFind(dtos, func(dto Directory) bool {
-		return slices.ContainsFunc(dto.Children, func(dt Directory) bool { return dt.ID == d.ID })
-	})
-	if ok {
-		parentID = parent.ID
-	}
-
+func (d Directory) ToModel(userID, parentID int) *model.Directory {
 	return &model.Directory{
 		ID:        d.ID,
 		UserID:    userID,

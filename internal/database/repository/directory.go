@@ -138,23 +138,12 @@ func (d *Directory) Update(ctx context.Context, directory model.Directory) error
 	return nil
 }
 
-func (d *Directory) Delete(ctx context.Context, id int) error {
-	if err := d.repo.queries(ctx).DirectoryDelete(ctx, int32(id)); err != nil {
-		return fmt.Errorf("delete directory %d | %w", id, err)
+func (d *Directory) DeleteByUser(ctx context.Context, userID int) error {
+	if err := d.repo.queries(ctx).DirectoryDeleteByUser(ctx, int32(userID)); err != nil {
+		return fmt.Errorf("delete directories by user %d | %w", userID, err)
 	}
 
 	// Directory playlists are deleted by cascade
-
-	return nil
-}
-
-func (d *Directory) DeletePlaylist(ctx context.Context, playlist model.DirectoryPlaylist) error {
-	if err := d.repo.queries(ctx).DirectoryPlaylistDeleteByDirectoryPlaylist(ctx, sqlc.DirectoryPlaylistDeleteByDirectoryPlaylistParams{
-		DirectoryID: int32(playlist.DirectoryID),
-		PlaylistID:  int32(playlist.DirectoryID),
-	}); err != nil {
-		return fmt.Errorf("delete directory playlist %+v | %w", playlist, err)
-	}
 
 	return nil
 }

@@ -30,13 +30,13 @@ func (q *Queries) DirectoryCreate(ctx context.Context, arg DirectoryCreateParams
 	return id, err
 }
 
-const directoryDelete = `-- name: DirectoryDelete :exec
+const directoryDeleteByUser = `-- name: DirectoryDeleteByUser :exec
 DELETE FROM directories
-WHERE id = $1
+WHERE user_id = $1
 `
 
-func (q *Queries) DirectoryDelete(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, directoryDelete, id)
+func (q *Queries) DirectoryDeleteByUser(ctx context.Context, userID int32) error {
+	_, err := q.db.Exec(ctx, directoryDeleteByUser, userID)
 	return err
 }
 
