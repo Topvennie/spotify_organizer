@@ -20,7 +20,7 @@ export namespace API {
     name: string;
     description?: string;
     public: boolean;
-    tracks: number;
+    track_amount: number;
     collaborative: boolean;
     has_cover: boolean;
   }

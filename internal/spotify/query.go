@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -20,6 +21,8 @@ const (
 	apiAccount = "https://accounts.spotify.com/api/token"
 	apiSpotify = "https://api.spotify.com/v1"
 )
+
+var noResp = &struct{}{}
 
 type accountResponse struct {
 	AccessToken  string `json:"access_token"`
@@ -108,20 +111,21 @@ func (c *client) getAccessToken(ctx context.Context, user model.User) (string, e
 	return accessToken, nil
 }
 
-func (c *client) request(ctx context.Context, user model.User, url string, target any) error {
-	zap.S().Infof("do request for url %s", url)
+func (c *client) request(ctx context.Context, user model.User, method, url string, body io.Reader, target any) error {
+	zap.S().Infof("do %s request for url %s", method, url)
 
 	accessToken, err := c.getAccessToken(ctx, user)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/%s", apiSpotify, url), http.NoBody)
+	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", apiSpotify, url), body)
 	if err != nil {
 		return fmt.Errorf("new http request %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -142,7 +146,7 @@ func (c *client) request(ctx context.Context, user model.User, url string, targe
 		zap.S().Info("rate limit hit")
 		time.Sleep(5 * time.Second)
 
-		return c.request(ctx, user, url, target)
+		return c.request(ctx, user, method, url, body, target)
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(target); err != nil {

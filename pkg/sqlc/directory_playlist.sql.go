@@ -27,13 +27,18 @@ func (q *Queries) DirectoryPlaylistCreate(ctx context.Context, arg DirectoryPlay
 	return id, err
 }
 
-const directoryPlaylistDelete = `-- name: DirectoryPlaylistDelete :exec
+const directoryPlaylistDeleteByDirectoryPlaylist = `-- name: DirectoryPlaylistDeleteByDirectoryPlaylist :exec
 DELETE FROM directory_playlists
-WHERE id = $1
+WHERE directory_id = $1 AND playlist_id = $2
 `
 
-func (q *Queries) DirectoryPlaylistDelete(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, directoryPlaylistDelete, id)
+type DirectoryPlaylistDeleteByDirectoryPlaylistParams struct {
+	DirectoryID int32
+	PlaylistID  int32
+}
+
+func (q *Queries) DirectoryPlaylistDeleteByDirectoryPlaylist(ctx context.Context, arg DirectoryPlaylistDeleteByDirectoryPlaylistParams) error {
+	_, err := q.db.Exec(ctx, directoryPlaylistDeleteByDirectoryPlaylist, arg.DirectoryID, arg.PlaylistID)
 	return err
 }
 

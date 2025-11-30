@@ -8,7 +8,7 @@ INSERT INTO directory_playlists (directory_id, playlist_id)
 VALUES ($1, $2)
 RETURNING id;
 
--- name: DirectoryPlaylistDelete :exec
+-- name: DirectoryPlaylistDeleteByDirectoryPlaylist :exec
 DELETE FROM directory_playlists
-WHERE id = $1;
+WHERE directory_id = $1 AND playlist_id = $2;
 

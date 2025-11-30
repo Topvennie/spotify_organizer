@@ -11,7 +11,7 @@ type Playlist struct {
 	Name          string `json:"name"`
 	Description   string `json:"description,omitzero"`
 	Public        bool   `json:"public"`
-	Tracks        int    `json:"tracks"`
+	TrackAmount   int    `json:"track_amount"`
 	Collaborative bool   `json:"collaborative"`
 	HasCover      bool   `json:"has_cover"`
 }
@@ -24,7 +24,7 @@ func PlaylistDTO(playlist *model.Playlist, user *model.User) Playlist {
 		Name:          playlist.Name,
 		Description:   playlist.Description,
 		Public:        playlist.Public,
-		Tracks:        playlist.Tracks,
+		TrackAmount:   playlist.TrackAmount,
 		Collaborative: playlist.Collaborative,
 		HasCover:      playlist.CoverID != "",
 	}
@@ -39,7 +39,7 @@ func (p Playlist) ToModel(userID int) *model.Playlist {
 		Name:          p.Name,
 		Description:   p.Description,
 		Public:        p.Public,
-		Tracks:        p.Tracks,
+		TrackAmount:   p.TrackAmount,
 		Collaborative: p.Collaborative,
 		Owner:         *p.Owner.ToModel(),
 	}

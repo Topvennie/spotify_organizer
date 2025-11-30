@@ -32,6 +32,8 @@ func NewAuth(router fiber.Router, service service.Service) *Auth {
 			config.GetString("auth.spotify.client_secret"),
 			config.GetString("auth.spotify.callback_url"),
 			auth_spotify.ScopePlaylistReadPrivate,
+			auth_spotify.ScopePlaylistModifyPublic,
+			auth_spotify.ScopePlaylistModifyPrivate,
 		),
 	)
 

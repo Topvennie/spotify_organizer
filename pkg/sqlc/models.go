@@ -37,15 +37,28 @@ type Playlist struct {
 	Name          string
 	Description   pgtype.Text
 	Public        bool
-	Tracks        int32
+	TrackAmount   int32
 	Collaborative bool
 	CoverID       pgtype.Text
+}
+
+type PlaylistTrack struct {
+	ID         int32
+	PlaylistID int32
+	TrackID    int32
 }
 
 type Setting struct {
 	ID          int32
 	UserID      int32
 	LastUpdated pgtype.Timestamptz
+}
+
+type Track struct {
+	ID         int32
+	SpotifyID  string
+	Name       string
+	Popularity int32
 }
 
 type User struct {

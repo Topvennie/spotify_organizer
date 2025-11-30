@@ -11,13 +11,13 @@ WHERE p.user_id = $1
 ORDER BY p.name;
 
 -- name: PlaylistCreate :one
-INSERT INTO playlists (user_id, spotify_id, owner_uid, name, description, public, tracks, collaborative, cover_id)
+INSERT INTO playlists (user_id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id;
 
 -- name: PlaylistUpdateBySpotify :exec
 UPDATE playlists
-SET owner_uid = $2, name = $3, description = $4, public = $5, tracks = $6, collaborative = $7, cover_id = $8
+SET owner_uid = $2, name = $3, description = $4, public = $5, track_amount = $6, collaborative = $7, cover_id = $8
 WHERE spotify_id = $1;
 
 -- name: PlaylistDelete :exec

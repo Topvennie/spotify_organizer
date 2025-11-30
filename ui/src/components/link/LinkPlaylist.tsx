@@ -30,7 +30,7 @@ export const LinkPlaylist = ({ playlist, side }: Props) => {
         <PlaylistCover playlist={playlist} />
       </div>
       <span className="whitespace-nowrap truncate">{playlist.name}</span>
-      <span className="text-muted text-sm">{playlist.tracks}</span>
+      <span className="text-muted text-sm">{playlist.trackAmount}</span>
       <div
         id={id}
         ref={el => registerAnchor(id, { el, side, playlist })}

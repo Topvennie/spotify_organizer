@@ -148,7 +148,10 @@ func (d *Directory) Sync(ctx context.Context, userID int, roots []dto.Directory)
 
 			for i := range entry.old.Playlists {
 				if _, ok := utils.SliceFind(entry.new.Playlists, func(p model.Playlist) bool { return p.ID == entry.old.Playlists[i].ID }); !ok {
-					if err := d.directory.DeletePlaylist(ctx, entry.old.Playlists[i].ID); err != nil {
+					if err := d.directory.DeletePlaylist(ctx, model.DirectoryPlaylist{
+						DirectoryID: entry.old.ID,
+						PlaylistID:  entry.old.Playlists[i].ID,
+					}); err != nil {
 						zap.S().Error(err)
 						return fiber.ErrInternalServerError
 					}

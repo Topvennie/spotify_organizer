@@ -12,7 +12,7 @@ import (
 )
 
 const playlistCreate = `-- name: PlaylistCreate :one
-INSERT INTO playlists (user_id, spotify_id, owner_uid, name, description, public, tracks, collaborative, cover_id)
+INSERT INTO playlists (user_id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id
 `
@@ -24,7 +24,7 @@ type PlaylistCreateParams struct {
 	Name          string
 	Description   pgtype.Text
 	Public        bool
-	Tracks        int32
+	TrackAmount   int32
 	Collaborative bool
 	CoverID       pgtype.Text
 }
@@ -37,7 +37,7 @@ func (q *Queries) PlaylistCreate(ctx context.Context, arg PlaylistCreateParams) 
 		arg.Name,
 		arg.Description,
 		arg.Public,
-		arg.Tracks,
+		arg.TrackAmount,
 		arg.Collaborative,
 		arg.CoverID,
 	)
@@ -57,7 +57,7 @@ func (q *Queries) PlaylistDelete(ctx context.Context, id int32) error {
 }
 
 const playlistGet = `-- name: PlaylistGet :one
-SELECT id, user_id, spotify_id, owner_uid, name, description, public, tracks, collaborative, cover_id
+SELECT id, user_id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id
 FROM playlists
 WHERE id = $1
 `
@@ -73,7 +73,7 @@ func (q *Queries) PlaylistGet(ctx context.Context, id int32) (Playlist, error) {
 		&i.Name,
 		&i.Description,
 		&i.Public,
-		&i.Tracks,
+		&i.TrackAmount,
 		&i.Collaborative,
 		&i.CoverID,
 	)
@@ -81,7 +81,7 @@ func (q *Queries) PlaylistGet(ctx context.Context, id int32) (Playlist, error) {
 }
 
 const playlistGetByUserWithOwner = `-- name: PlaylistGetByUserWithOwner :many
-SELECT p.id, p.user_id, p.spotify_id, p.owner_uid, p.name, p.description, p.public, p.tracks, p.collaborative, p.cover_id, u.id, u.uid, u.name, u.display_name, u.email
+SELECT p.id, p.user_id, p.spotify_id, p.owner_uid, p.name, p.description, p.public, p.track_amount, p.collaborative, p.cover_id, u.id, u.uid, u.name, u.display_name, u.email
 FROM playlists p
 LEFT JOIN users u ON u.uid = p.owner_uid
 WHERE p.user_id = $1
@@ -110,7 +110,7 @@ func (q *Queries) PlaylistGetByUserWithOwner(ctx context.Context, userID int32) 
 			&i.Playlist.Name,
 			&i.Playlist.Description,
 			&i.Playlist.Public,
-			&i.Playlist.Tracks,
+			&i.Playlist.TrackAmount,
 			&i.Playlist.Collaborative,
 			&i.Playlist.CoverID,
 			&i.User.ID,
@@ -131,7 +131,7 @@ func (q *Queries) PlaylistGetByUserWithOwner(ctx context.Context, userID int32) 
 
 const playlistUpdateBySpotify = `-- name: PlaylistUpdateBySpotify :exec
 UPDATE playlists
-SET owner_uid = $2, name = $3, description = $4, public = $5, tracks = $6, collaborative = $7, cover_id = $8
+SET owner_uid = $2, name = $3, description = $4, public = $5, track_amount = $6, collaborative = $7, cover_id = $8
 WHERE spotify_id = $1
 `
 
@@ -141,7 +141,7 @@ type PlaylistUpdateBySpotifyParams struct {
 	Name          string
 	Description   pgtype.Text
 	Public        bool
-	Tracks        int32
+	TrackAmount   int32
 	Collaborative bool
 	CoverID       pgtype.Text
 }
@@ -153,7 +153,7 @@ func (q *Queries) PlaylistUpdateBySpotify(ctx context.Context, arg PlaylistUpdat
 		arg.Name,
 		arg.Description,
 		arg.Public,
-		arg.Tracks,
+		arg.TrackAmount,
 		arg.Collaborative,
 		arg.CoverID,
 	)

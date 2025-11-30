@@ -56,7 +56,7 @@ func (p *Playlist) Create(ctx context.Context, playlist *model.Playlist) error {
 		Name:          playlist.Name,
 		Description:   pgtype.Text{String: playlist.Description, Valid: playlist.Description != ""},
 		Public:        playlist.Public,
-		Tracks:        int32(playlist.Tracks),
+		TrackAmount:   int32(playlist.TrackAmount),
 		Collaborative: playlist.Collaborative,
 		CoverID:       pgtype.Text{String: playlist.CoverID, Valid: playlist.CoverID != ""},
 	})
@@ -69,6 +69,20 @@ func (p *Playlist) Create(ctx context.Context, playlist *model.Playlist) error {
 	return nil
 }
 
+func (p *Playlist) CreateTrack(ctx context.Context, track *model.PlaylistTrack) error {
+	id, err := p.repo.queries(ctx).PlaylistTrackCreate(ctx, sqlc.PlaylistTrackCreateParams{
+		PlaylistID: int32(track.PlaylistID),
+		TrackID:    int32(track.TrackID),
+	})
+	if err != nil {
+		return fmt.Errorf("create playlist track %+v | %w", *track, err)
+	}
+
+	track.ID = int(id)
+
+	return nil
+}
+
 func (p *Playlist) Update(ctx context.Context, playlist model.Playlist) error {
 	if err := p.repo.queries(ctx).PlaylistUpdateBySpotify(ctx, sqlc.PlaylistUpdateBySpotifyParams{
 		SpotifyID:     playlist.SpotifyID,
@@ -76,7 +90,7 @@ func (p *Playlist) Update(ctx context.Context, playlist model.Playlist) error {
 		Name:          playlist.Name,
 		Description:   pgtype.Text{String: playlist.Description, Valid: playlist.Description != ""},
 		Public:        playlist.Public,
-		Tracks:        int32(playlist.Tracks),
+		TrackAmount:   int32(playlist.TrackAmount),
 		Collaborative: playlist.Collaborative,
 		CoverID:       pgtype.Text{String: playlist.CoverID, Valid: playlist.CoverID != ""},
 	}); err != nil {
@@ -88,7 +102,18 @@ func (p *Playlist) Update(ctx context.Context, playlist model.Playlist) error {
 
 func (p *Playlist) Delete(ctx context.Context, id int) error {
 	if err := p.repo.queries(ctx).PlaylistDelete(ctx, int32(id)); err != nil {
-		return fmt.Errorf("delete playlist %d", id)
+		return fmt.Errorf("delete playlist %d | %w", id, err)
+	}
+
+	return nil
+}
+
+func (p *Playlist) DeleteTrackByPlaylistTrack(ctx context.Context, track model.PlaylistTrack) error {
+	if err := p.repo.queries(ctx).PlaylistTrackDeleteByPlaylistTrack(ctx, sqlc.PlaylistTrackDeleteByPlaylistTrackParams{
+		PlaylistID: int32(track.PlaylistID),
+		TrackID:    int32(track.TrackID),
+	}); err != nil {
+		return fmt.Errorf("delete playlist track %+v | %w", track, err)
 	}
 
 	return nil

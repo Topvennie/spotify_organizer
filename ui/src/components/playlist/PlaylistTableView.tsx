@@ -6,12 +6,12 @@ import { FaCheck, FaX } from "react-icons/fa6";
 import { LoadingSpinner } from "../molecules/LoadingSpinner";
 import { PlaylistCover } from "./PlaylistCover";
 
-type SortKey = "name" | "tracks" | "owner.name"
+type SortKey = "name" | "trackAmount" | "owner.name"
 
 const sortBy = (playlists: Playlist[], key: SortKey): Playlist[] => {
   const getter: Record<SortKey, (p: Playlist) => string | number> = {
     name: p => p.name,
-    tracks: p => p.tracks,
+    trackAmount: p => p.trackAmount,
     "owner.name": p => p.owner?.name ?? "",
   };
 
@@ -52,7 +52,7 @@ export const PlaylistTableView = () => {
             render: playlist => <PlaylistCover playlist={playlist} />,
           },
           { accessor: "name", sortable: true },
-          { accessor: "tracks", sortable: true },
+          { accessor: "trackAmount", sortable: true },
           { accessor: "owner.name", sortable: true },
           {
             accessor: "public",

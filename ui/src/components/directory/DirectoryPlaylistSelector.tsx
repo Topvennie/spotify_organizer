@@ -29,7 +29,7 @@ const Entry = ({ playlist }: { playlist: Playlist }) => {
   return (
     <div ref={setNodeRef} className="border border-gray-100 z-10 shadow-xs bg-white rounded-md p-4 cursor-pointer" style={style} {...listeners} {...attributes}>
       <p className="font-bold">{playlist.name}</p>
-      <p>{playlist.tracks}</p>
+      <p>{playlist.trackAmount}</p>
     </div>
   )
 }

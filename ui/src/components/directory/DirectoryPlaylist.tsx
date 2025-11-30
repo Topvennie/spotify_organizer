@@ -16,7 +16,7 @@ export const DirectoryPlaylist = ({ playlist, onDelete, className, ...props }: P
       <div className="flex items-center gap-2">
         <PlaylistCover playlist={playlist} />
         <span className="whitespace-nowrap">{playlist.name}</span>
-        <span className="text-muted text-sm">{playlist.tracks}</span>
+        <span className="text-muted text-sm">{playlist.trackAmount}</span>
       </div>
       <ActionIcon onClick={() => onDelete(playlist)} color="red" variant="subtle">
         <FaTrashCan />

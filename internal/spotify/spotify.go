@@ -15,9 +15,12 @@ import (
 var ErrUnauthorized = errors.New("access and refresh token expired")
 
 type client struct {
-	playlist repository.Playlist
-	setting  repository.Setting
-	user     repository.User
+	directory repository.Directory
+	link      repository.Link
+	playlist  repository.Playlist
+	setting   repository.Setting
+	track     repository.Track
+	user      repository.User
 
 	clientID     string
 	clientSecret string
@@ -34,8 +37,11 @@ func Init(repo repository.Repository) error {
 	}
 
 	C = &client{
+		directory:    *repo.NewDirectory(),
+		link:         *repo.NewLink(),
 		playlist:     *repo.NewPlaylist(),
 		setting:      *repo.NewSetting(),
+		track:        *repo.NewTrack(),
 		user:         *repo.NewUser(),
 		clientID:     clientID,
 		clientSecret: clientSecret,
@@ -61,8 +67,16 @@ func (c *client) Sync(ctx context.Context, user model.User) error {
 		return fmt.Errorf("sync playlists for user %+v | %w", user, err)
 	}
 
+	if err := c.playlistTrackSync(ctx, user); err != nil {
+		return fmt.Errorf("sync playlist tracks for user %+v | %w", user, err)
+	}
+
 	if err := c.userSync(ctx, user); err != nil {
 		return fmt.Errorf("sync users for user %+v | %w", user, err)
+	}
+
+	if err := c.linkSync(ctx, user); err != nil {
+		return fmt.Errorf("sync links for user %+v | %w", user, err)
 	}
 
 	setting, err := c.setting.GetByUser(ctx, user.ID)
