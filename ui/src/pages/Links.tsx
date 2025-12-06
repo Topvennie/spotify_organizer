@@ -3,8 +3,11 @@ import { LinkConnections } from "@/components/link/LinkConnections"
 import { LinkTree } from "@/components/link/LinkTree"
 import { Confirm } from "@/components/molecules/Confirm"
 import { useDirectoryGetAll } from "@/lib/api/directory"
+import { usePlaylistGetAll } from "@/lib/api/playlist"
 import { useLinkAnchor } from "@/lib/hooks/useLinkAnchor"
 import { LinkAnchorProvider } from "@/lib/providers/LinkAnchorProvider"
+import { Directory } from "@/lib/types/directory"
+import { Playlist } from "@/lib/types/playlist"
 import { Badge, Button, Group, Stack } from "@mantine/core"
 import { useDisclosure, useMediaQuery } from "@mantine/hooks"
 import { useMemo } from "react"
@@ -22,8 +25,22 @@ Some connections are not shown because the source / destination is not visible. 
 Tracks from sources will periodically be added to the destination
 `
 
+const getPlaylists = (directory: Directory): Playlist[] => {
+  return [
+    ...directory.playlists,
+    ...(directory.children?.flatMap(getPlaylists) ?? [])
+  ]
+}
+
+
 const LinksInner = () => {
-  const { data: directories, isLoading } = useDirectoryGetAll()
+  const { data: playlistsAll, isLoading: isLoadingPlaylists } = usePlaylistGetAll()
+  const { data: directories, isLoading: isLoadingDirectories } = useDirectoryGetAll()
+
+  const unAssigned = useMemo(() => {
+    const playlists = (directories?.flatMap(getPlaylists) ?? []).map(p => p.id)
+    return playlistsAll?.filter(p => !playlists.includes(p.id)) ?? []
+  }, [playlistsAll, directories])
 
   const { visibleAnchorsRef, connections, layoutVersion, resetConnections, saveConnections } = useLinkAnchor()
   const hidden = useMemo(() => {
@@ -65,7 +82,7 @@ const LinksInner = () => {
               title="Visual linking"
               description={explanation}
             />
-            <Stack gap="xs" align="end">
+            <Stack gap="xs" align="end" className="flex-1">
               <Badge color="secondary.2">{`${connections.length} Connection${connections.length !== 1 ? "s" : ""}`}</Badge>
               <Badge color="red">{`${hidden} Hidden`}</Badge>
             </Stack>
@@ -73,17 +90,19 @@ const LinksInner = () => {
           <div className="flex-1 flex gap-4 overflow-hidden">
             <LinkTree
               roots={directories ?? []}
+              unAssigned={unAssigned}
               side="left"
               title="Source"
-              isLoading={isLoading}
+              isLoading={isLoadingPlaylists || isLoadingDirectories}
               className="flex-1"
             />
             <div className="h-full w-[20%]" />
             <LinkTree
               roots={directories ?? []}
+              unAssigned={unAssigned}
               side="right"
               title="Target"
-              isLoading={isLoading}
+              isLoading={isLoadingPlaylists || isLoadingDirectories}
               className="flex-1"
             />
           </div>
