@@ -31,6 +31,10 @@ FROM base-frontend AS frontend-build
 
 WORKDIR /frontend/ui
 
+ARG BUILD_TIME
+ENV VITE_BUILD_TIME=$BUILD_TIME
+
+ENV CI=true
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm run build
 

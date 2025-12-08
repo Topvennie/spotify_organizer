@@ -6,14 +6,14 @@ WHERE id = $1;
 -- name: PlaylistGetBySpotify :one
 SELECT *
 FROM playlists
-WHERE spotify_id = $1 AND NOT deleted_at;
+WHERE spotify_id = $1 AND deleted_at IS NULL;
 
 -- name: PlaylistGetByUserWithOwner :many
 SELECT sqlc.embed(p), sqlc.embed(u)
 FROM playlists p
 LEFT JOIN playlist_users pu ON pu.playlist_id = p.id
 LEFT JOIN users u ON u.uid = p.owner_uid
-WHERE pu.user_id = $1 AND NOT deleted_at
+WHERE pu.user_id = $1 AND deleted_at IS NULL
 ORDER BY p.name;
 
 -- name: PlaylistCreate :one

@@ -1,5 +1,5 @@
 import { useAuth } from "@/lib/hooks/useAuth";
-import { Text, Center, Stack, Title, Button } from "@mantine/core";
+import { Button, Center, Stack, Text, Title } from "@mantine/core";
 import { useNavigate } from "@tanstack/react-router";
 
 export const Forbidden = () => {
