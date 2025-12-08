@@ -1,10 +1,17 @@
 package spotify
 
 import (
+	"bytes"
 	"context"
+	"errors"
+	"fmt"
+	"sync"
 
+	"github.com/google/uuid"
 	"github.com/topvennie/sortifyr/internal/database/model"
 	"github.com/topvennie/sortifyr/internal/spotify/api"
+	"github.com/topvennie/sortifyr/pkg/concurrent"
+	"github.com/topvennie/sortifyr/pkg/storage"
 	"github.com/topvennie/sortifyr/pkg/utils"
 )
 
@@ -88,6 +95,75 @@ func (c *client) albumUpdate(ctx context.Context, user model.User) error {
 				return err
 			}
 		}
+	}
+
+	return nil
+}
+
+func (c *client) albumCoverSync(ctx context.Context, user model.User) error {
+	albums, err := c.album.GetByUser(ctx, user.ID)
+	if err != nil {
+		return err
+	}
+
+	wg := concurrent.NewLimitedWaitGroup(12)
+
+	var mu sync.Mutex
+	var errs []error
+
+	for _, album := range albums {
+		if album.CoverURL == "" {
+			continue
+		}
+
+		wg.Go(func() {
+			cover, err := c.api.ImageGet(ctx, album.CoverURL)
+			if err != nil {
+				mu.Lock()
+				errs = append(errs, err)
+				mu.Unlock()
+				return
+			}
+			if len(cover) == 0 {
+				return
+			}
+
+			oldCover := []byte{}
+			if album.CoverID != "" {
+				oldCover, err = storage.S.Get(album.CoverID)
+				if err != nil {
+					mu.Lock()
+					errs = append(errs, fmt.Errorf("get cover for %+v | %w", *album, err))
+					mu.Unlock()
+					return
+				}
+			}
+
+			if bytes.Equal(cover, oldCover) {
+				return
+			}
+
+			album.CoverID = uuid.NewString()
+			if err := storage.S.Set(album.CoverID, cover, 0); err != nil {
+				mu.Lock()
+				errs = append(errs, fmt.Errorf("store new cover %+v | %w", *album, err))
+				mu.Unlock()
+				return
+			}
+
+			if err := c.album.Update(ctx, *album); err != nil {
+				mu.Lock()
+				errs = append(errs, err)
+				mu.Unlock()
+				return
+			}
+		})
+	}
+
+	wg.Wait()
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
 	}
 
 	return nil

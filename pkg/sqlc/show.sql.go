@@ -7,11 +7,13 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const showCreate = `-- name: ShowCreate :one
-INSERT INTO shows (spotify_id, episode_amount, name)
-VALUES ($1, $2, $3)
+INSERT INTO shows (spotify_id, episode_amount, name, cover_id, cover_url)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id
 `
 
@@ -19,17 +21,25 @@ type ShowCreateParams struct {
 	SpotifyID     string
 	EpisodeAmount int32
 	Name          string
+	CoverID       pgtype.Text
+	CoverUrl      pgtype.Text
 }
 
 func (q *Queries) ShowCreate(ctx context.Context, arg ShowCreateParams) (int32, error) {
-	row := q.db.QueryRow(ctx, showCreate, arg.SpotifyID, arg.EpisodeAmount, arg.Name)
+	row := q.db.QueryRow(ctx, showCreate,
+		arg.SpotifyID,
+		arg.EpisodeAmount,
+		arg.Name,
+		arg.CoverID,
+		arg.CoverUrl,
+	)
 	var id int32
 	err := row.Scan(&id)
 	return id, err
 }
 
 const showGetBySpotify = `-- name: ShowGetBySpotify :one
-SELECT id, spotify_id, episode_amount, name
+SELECT id, spotify_id, episode_amount, name, cover_url, cover_id
 FROM shows
 WHERE spotify_id = $1
 `
@@ -42,12 +52,14 @@ func (q *Queries) ShowGetBySpotify(ctx context.Context, spotifyID string) (Show,
 		&i.SpotifyID,
 		&i.EpisodeAmount,
 		&i.Name,
+		&i.CoverUrl,
+		&i.CoverID,
 	)
 	return i, err
 }
 
 const showGetByUser = `-- name: ShowGetByUser :many
-SELECT s.id, s.spotify_id, s.episode_amount, s.name
+SELECT s.id, s.spotify_id, s.episode_amount, s.name, s.cover_url, s.cover_id
 FROM shows s
 LEFT JOIN show_users su on su.show_id = s.id
 WHERE su.user_id = $1
@@ -67,6 +79,8 @@ func (q *Queries) ShowGetByUser(ctx context.Context, userID int32) ([]Show, erro
 			&i.SpotifyID,
 			&i.EpisodeAmount,
 			&i.Name,
+			&i.CoverUrl,
+			&i.CoverID,
 		); err != nil {
 			return nil, err
 		}
@@ -80,7 +94,7 @@ func (q *Queries) ShowGetByUser(ctx context.Context, userID int32) ([]Show, erro
 
 const showUpdate = `-- name: ShowUpdate :exec
 UPDATE shows
-SET name = $2, episode_amount = $3
+SET name = $2, episode_amount = $3, cover_id = $4, cover_url = $5
 WHERE id = $1
 `
 
@@ -88,9 +102,17 @@ type ShowUpdateParams struct {
 	ID            int32
 	Name          string
 	EpisodeAmount int32
+	CoverID       pgtype.Text
+	CoverUrl      pgtype.Text
 }
 
 func (q *Queries) ShowUpdate(ctx context.Context, arg ShowUpdateParams) error {
-	_, err := q.db.Exec(ctx, showUpdate, arg.ID, arg.Name, arg.EpisodeAmount)
+	_, err := q.db.Exec(ctx, showUpdate,
+		arg.ID,
+		arg.Name,
+		arg.EpisodeAmount,
+		arg.CoverID,
+		arg.CoverUrl,
+	)
 	return err
 }

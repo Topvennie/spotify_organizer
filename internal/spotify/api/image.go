@@ -7,9 +7,11 @@ import (
 	"net/http"
 
 	"github.com/topvennie/sortifyr/pkg/image"
+	"go.uber.org/zap"
 )
 
-func ImageGet(ctx context.Context, url string) ([]byte, error) {
+func (c *Client) ImageGet(ctx context.Context, url string) ([]byte, error) {
+	zap.S().Debugf("Doing request for %s", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("new http request %w", err)

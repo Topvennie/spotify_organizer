@@ -8,15 +8,28 @@ type Album struct {
 	Name        string
 	TrackAmount int
 	Popularity  int
+	CoverID     string
+	CoverURL    string
 }
 
 func AlbumModel(a sqlc.Album) *Album {
+	coverID := ""
+	if a.CoverID.Valid {
+		coverID = a.CoverID.String
+	}
+	coverURL := ""
+	if a.CoverUrl.Valid {
+		coverURL = a.CoverUrl.String
+	}
+
 	return &Album{
 		ID:          int(a.ID),
 		SpotifyID:   a.SpotifyID,
 		Name:        a.Name,
 		TrackAmount: int(a.TrackAmount),
 		Popularity:  int(a.Popularity),
+		CoverID:     coverID,
+		CoverURL:    coverURL,
 	}
 }
 

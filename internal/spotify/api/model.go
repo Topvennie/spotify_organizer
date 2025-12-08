@@ -7,18 +7,29 @@ import (
 )
 
 type Album struct {
-	SpotifyID   string `json:"id"`
-	Name        string `json:"name"`
-	TrackAmount int    `json:"total_tracks"`
-	Popularity  int    `json:"popularity"`
+	SpotifyID   string  `json:"id"`
+	Name        string  `json:"name"`
+	TrackAmount int     `json:"total_tracks"`
+	Popularity  int     `json:"popularity"`
+	Images      []Image `json:"images"`
 }
 
 func (a Album) ToModel() model.Album {
+	url := ""
+	maxWidth := -1
+	for _, image := range a.Images {
+		if image.Width > maxWidth {
+			url = image.URL
+			maxWidth = image.Width
+		}
+	}
+
 	return model.Album{
 		SpotifyID:   a.SpotifyID,
 		Name:        a.Name,
 		TrackAmount: a.TrackAmount,
 		Popularity:  a.Popularity,
+		CoverURL:    url,
 	}
 }
 
@@ -107,16 +118,27 @@ func (p *Playlist) ToModel() model.Playlist {
 }
 
 type Show struct {
-	SpotifyID     string `json:"id"`
-	Name          string `json:"name"`
-	EpisodeAmount int    `json:"total_episodes"`
+	SpotifyID     string  `json:"id"`
+	Name          string  `json:"name"`
+	EpisodeAmount int     `json:"total_episodes"`
+	Images        []Image `json:"images"`
 }
 
 func (s Show) ToModel() model.Show {
+	url := ""
+	maxWidth := -1
+	for _, image := range s.Images {
+		if image.Width > maxWidth {
+			url = image.URL
+			maxWidth = image.Width
+		}
+	}
+
 	return model.Show{
 		SpotifyID:     s.SpotifyID,
 		Name:          s.Name,
 		EpisodeAmount: s.EpisodeAmount,
+		CoverURL:      url,
 	}
 }
 

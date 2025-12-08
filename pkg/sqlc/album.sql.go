@@ -7,11 +7,13 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const albumCreate = `-- name: AlbumCreate :one
-INSERT INTO albums (spotify_id, name, track_amount, popularity)
-VALUES ($1, $2, $3, $4)
+INSERT INTO albums (spotify_id, name, track_amount, popularity, cover_id, cover_url)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id
 `
 
@@ -20,6 +22,8 @@ type AlbumCreateParams struct {
 	Name        string
 	TrackAmount int32
 	Popularity  int32
+	CoverID     pgtype.Text
+	CoverUrl    pgtype.Text
 }
 
 func (q *Queries) AlbumCreate(ctx context.Context, arg AlbumCreateParams) (int32, error) {
@@ -28,6 +32,8 @@ func (q *Queries) AlbumCreate(ctx context.Context, arg AlbumCreateParams) (int32
 		arg.Name,
 		arg.TrackAmount,
 		arg.Popularity,
+		arg.CoverID,
+		arg.CoverUrl,
 	)
 	var id int32
 	err := row.Scan(&id)
@@ -35,7 +41,7 @@ func (q *Queries) AlbumCreate(ctx context.Context, arg AlbumCreateParams) (int32
 }
 
 const albumGetBySpotify = `-- name: AlbumGetBySpotify :one
-SELECT id, spotify_id, name, track_amount, popularity
+SELECT id, spotify_id, name, track_amount, popularity, cover_url, cover_id
 FROM albums
 WHERE spotify_id = $1
 `
@@ -49,12 +55,14 @@ func (q *Queries) AlbumGetBySpotify(ctx context.Context, spotifyID string) (Albu
 		&i.Name,
 		&i.TrackAmount,
 		&i.Popularity,
+		&i.CoverUrl,
+		&i.CoverID,
 	)
 	return i, err
 }
 
 const albumGetByUser = `-- name: AlbumGetByUser :many
-SELECT a.id, a.spotify_id, a.name, a.track_amount, a.popularity
+SELECT a.id, a.spotify_id, a.name, a.track_amount, a.popularity, a.cover_url, a.cover_id
 FROM albums a
 LEFT JOIN album_users au on au.album_id = a.id
 WHERE au.user_id = $1
@@ -75,6 +83,8 @@ func (q *Queries) AlbumGetByUser(ctx context.Context, userID int32) ([]Album, er
 			&i.Name,
 			&i.TrackAmount,
 			&i.Popularity,
+			&i.CoverUrl,
+			&i.CoverID,
 		); err != nil {
 			return nil, err
 		}
@@ -88,7 +98,7 @@ func (q *Queries) AlbumGetByUser(ctx context.Context, userID int32) ([]Album, er
 
 const albumUpdate = `-- name: AlbumUpdate :exec
 UPDATE albums
-SET name = $2, track_amount = $3, popularity = $4
+SET name = $2, track_amount = $3, popularity = $4, cover_id = $5, cover_url = $6
 WHERE id = $1
 `
 
@@ -97,6 +107,8 @@ type AlbumUpdateParams struct {
 	Name        string
 	TrackAmount int32
 	Popularity  int32
+	CoverID     pgtype.Text
+	CoverUrl    pgtype.Text
 }
 
 func (q *Queries) AlbumUpdate(ctx context.Context, arg AlbumUpdateParams) error {
@@ -105,6 +117,8 @@ func (q *Queries) AlbumUpdate(ctx context.Context, arg AlbumUpdateParams) error 
 		arg.Name,
 		arg.TrackAmount,
 		arg.Popularity,
+		arg.CoverID,
+		arg.CoverUrl,
 	)
 	return err
 }

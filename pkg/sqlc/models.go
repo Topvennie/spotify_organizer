@@ -59,6 +59,8 @@ type Album struct {
 	Name        string
 	TrackAmount int32
 	Popularity  int32
+	CoverUrl    pgtype.Text
+	CoverID     pgtype.Text
 }
 
 type AlbumUser struct {
@@ -137,6 +139,8 @@ type Show struct {
 	SpotifyID     string
 	EpisodeAmount int32
 	Name          string
+	CoverUrl      pgtype.Text
+	CoverID       pgtype.Text
 }
 
 type ShowUser struct {

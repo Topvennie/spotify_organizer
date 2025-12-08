@@ -7,14 +7,27 @@ type Show struct {
 	SpotifyID     string
 	Name          string
 	EpisodeAmount int
+	CoverID       string
+	CoverURL      string
 }
 
 func ShowModel(s sqlc.Show) *Show {
+	coverID := ""
+	if s.CoverID.Valid {
+		coverID = s.CoverID.String
+	}
+	coverURL := ""
+	if s.CoverUrl.Valid {
+		coverURL = s.CoverUrl.String
+	}
+
 	return &Show{
 		ID:            int(s.ID),
 		SpotifyID:     s.SpotifyID,
 		Name:          s.Name,
 		EpisodeAmount: int(s.EpisodeAmount),
+		CoverID:       coverID,
+		CoverURL:      coverURL,
 	}
 }
 

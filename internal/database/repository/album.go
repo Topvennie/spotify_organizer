@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/topvennie/sortifyr/internal/database/model"
 	"github.com/topvennie/sortifyr/pkg/sqlc"
 	"github.com/topvennie/sortifyr/pkg/utils"
@@ -51,6 +52,8 @@ func (a *Album) Create(ctx context.Context, album *model.Album) error {
 		Name:        album.Name,
 		TrackAmount: int32(album.TrackAmount),
 		Popularity:  int32(album.Popularity),
+		CoverID:     pgtype.Text{String: album.CoverID, Valid: album.CoverID != ""},
+		CoverUrl:    pgtype.Text{String: album.CoverURL, Valid: album.CoverURL != ""},
 	})
 	if err != nil {
 		return fmt.Errorf("create album %+v | %w", *album, err)
@@ -81,6 +84,8 @@ func (a *Album) Update(ctx context.Context, album model.Album) error {
 		Name:        album.Name,
 		TrackAmount: int32(album.TrackAmount),
 		Popularity:  int32(album.Popularity),
+		CoverID:     pgtype.Text{String: album.CoverID, Valid: album.CoverID != ""},
+		CoverUrl:    pgtype.Text{String: album.CoverURL, Valid: album.CoverURL != ""},
 	}); err != nil {
 		return fmt.Errorf("update album %+v | %w", album, err)
 	}

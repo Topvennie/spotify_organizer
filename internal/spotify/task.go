@@ -102,12 +102,11 @@ func (c *client) taskPlaylist(ctx context.Context, user model.User) (string, err
 		return "", fmt.Errorf("update playlists %w", err)
 	}
 
-	msg2, err := c.playlistCoverSync(ctx, user)
-	if err != nil {
+	if err := c.playlistCoverSync(ctx, user); err != nil {
 		return "", fmt.Errorf("synchronize playlist covers %w", err)
 	}
 
-	return msg2, nil
+	return "", nil
 }
 
 func (c *client) taskAlbum(ctx context.Context, user model.User) (string, error) {
@@ -117,6 +116,10 @@ func (c *client) taskAlbum(ctx context.Context, user model.User) (string, error)
 
 	if err := c.albumUpdate(ctx, user); err != nil {
 		return "", fmt.Errorf("update albums %w", err)
+	}
+
+	if err := c.albumCoverSync(ctx, user); err != nil {
+		return "", fmt.Errorf("synchronize album covers %w", err)
 	}
 
 	return "", nil
@@ -129,6 +132,10 @@ func (c *client) taskShow(ctx context.Context, user model.User) (string, error) 
 
 	if err := c.showUpdate(ctx, user); err != nil {
 		return "", fmt.Errorf("update shows %w", err)
+	}
+
+	if err := c.showCoverSync(ctx, user); err != nil {
+		return "", fmt.Errorf("synchronize show covers %w", err)
 	}
 
 	return "", nil

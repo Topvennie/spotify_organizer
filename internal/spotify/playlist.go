@@ -3,11 +3,14 @@ package spotify
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/topvennie/sortifyr/internal/database/model"
 	"github.com/topvennie/sortifyr/internal/spotify/api"
+	"github.com/topvennie/sortifyr/pkg/concurrent"
 	"github.com/topvennie/sortifyr/pkg/storage"
 	"github.com/topvennie/sortifyr/pkg/utils"
 )
@@ -107,55 +110,73 @@ func (c *client) playlistUpdate(ctx context.Context, user model.User) error {
 	return nil
 }
 
-func (c *client) playlistCoverSync(ctx context.Context, user model.User) (string, error) {
+func (c *client) playlistCoverSync(ctx context.Context, user model.User) error {
 	playlists, err := c.playlist.GetByUserPopulated(ctx, user.ID)
 	if err != nil {
-		return "", err
-	}
-	if playlists == nil {
-		return "", nil
+		return err
 	}
 
-	newCovers := 0
+	wg := concurrent.NewLimitedWaitGroup(12)
+
+	var mu sync.Mutex
+	var errs []error
 
 	for _, playlist := range playlists {
 		if playlist.CoverURL == "" {
 			continue
 		}
 
-		cover, err := c.getCover(*playlist)
-		if err != nil {
-			return "", err
-		}
-		if len(cover) == 0 {
-			continue
-		}
-
-		oldCover := []byte{}
-		if playlist.CoverID != "" {
-			oldCover, err = storage.S.Get(playlist.CoverID)
+		wg.Go(func() {
+			cover, err := c.api.ImageGet(ctx, playlist.CoverURL)
 			if err != nil {
-				return "", fmt.Errorf("get cover for %+v | %w", *playlist, err)
+				mu.Lock()
+				errs = append(errs, err)
+				mu.Unlock()
+				return
 			}
-		}
+			if len(cover) == 0 {
+				return
+			}
 
-		if bytes.Equal(cover, oldCover) {
-			continue
-		}
+			oldCover := []byte{}
+			if playlist.CoverID != "" {
+				oldCover, err = storage.S.Get(playlist.CoverID)
+				if err != nil {
+					mu.Lock()
+					errs = append(errs, fmt.Errorf("get cover for %+v | %w", *playlist, err))
+					mu.Unlock()
+					return
+				}
+			}
 
-		playlist.CoverID = uuid.NewString()
-		if err := storage.S.Set(playlist.CoverID, cover, 0); err != nil {
-			return "", fmt.Errorf("store new cover %+v | %w", *playlist, err)
-		}
+			if bytes.Equal(cover, oldCover) {
+				return
+			}
 
-		if err := c.playlist.Update(ctx, *playlist); err != nil {
-			return "", err
-		}
+			playlist.CoverID = uuid.NewString()
+			if err := storage.S.Set(playlist.CoverID, cover, 0); err != nil {
+				mu.Lock()
+				errs = append(errs, fmt.Errorf("store new cover %+v | %w", *playlist, err))
+				mu.Unlock()
+				return
+			}
 
-		newCovers++
+			if err := c.playlist.Update(ctx, *playlist); err != nil {
+				mu.Lock()
+				errs = append(errs, err)
+				mu.Unlock()
+				return
+			}
+		})
 	}
 
-	return fmt.Sprintf("New Covers: %d", newCovers), nil
+	wg.Wait()
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	return nil
 }
 
 // playlistTrackSync brings the local database up to date with the songs for each playlist

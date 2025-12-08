@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/topvennie/sortifyr/internal/database/model"
 	"github.com/topvennie/sortifyr/pkg/sqlc"
 	"github.com/topvennie/sortifyr/pkg/utils"
@@ -50,6 +51,8 @@ func (s *Show) Create(ctx context.Context, show *model.Show) error {
 		SpotifyID:     show.SpotifyID,
 		Name:          show.Name,
 		EpisodeAmount: int32(show.EpisodeAmount),
+		CoverID:       pgtype.Text{String: show.CoverID, Valid: show.CoverID != ""},
+		CoverUrl:      pgtype.Text{String: show.CoverURL, Valid: show.CoverURL != ""},
 	})
 	if err != nil {
 		return fmt.Errorf("create show %+v | %w", *show, err)
@@ -79,6 +82,8 @@ func (s *Show) Update(ctx context.Context, show model.Show) error {
 		ID:            int32(show.ID),
 		Name:          show.Name,
 		EpisodeAmount: int32(show.EpisodeAmount),
+		CoverID:       pgtype.Text{String: show.CoverID, Valid: show.CoverID != ""},
+		CoverUrl:      pgtype.Text{String: show.CoverURL, Valid: show.CoverURL != ""},
 	}); err != nil {
 		return fmt.Errorf("update show %+v | %w", show, err)
 	}
