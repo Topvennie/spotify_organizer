@@ -34,6 +34,7 @@ func NewAuth(router fiber.Router, service service.Service) *Auth {
 			auth_spotify.ScopePlaylistModifyPublic,
 			auth_spotify.ScopePlaylistModifyPrivate,
 			auth_spotify.ScopeUserReadRecentlyPlayed,
+			auth_spotify.ScopeUserLibraryRead,
 		),
 	)
 

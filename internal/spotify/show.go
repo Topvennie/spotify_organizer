@@ -4,7 +4,94 @@ import (
 	"context"
 
 	"github.com/topvennie/sortifyr/internal/database/model"
+	"github.com/topvennie/sortifyr/internal/spotify/api"
+	"github.com/topvennie/sortifyr/pkg/utils"
 )
+
+// showSync will syncronize the user's saved shows
+func (c *client) showSync(ctx context.Context, user model.User) error {
+	showsDB, err := c.show.GetByUser(ctx, user.ID)
+	if err != nil {
+		return err
+	}
+
+	showsSpotifyAPI, err := c.api.ShowGetAll(ctx, user)
+	if err != nil {
+		return err
+	}
+	showsSpotify := utils.SliceMap(showsSpotifyAPI, func(s api.Show) model.Show { return s.ToModel() })
+
+	// Find shows we need to create
+	for i := range showsSpotify {
+		if _, ok := utils.SliceFind(showsDB, func(s *model.Show) bool { return s.Equal(showsSpotify[i]) }); ok {
+			continue
+		}
+
+		// User doesn't have this show yet
+		show, err := c.show.GetBySpotify(ctx, showsSpotify[i].SpotifyID)
+		if err != nil {
+			return err
+		}
+		if show == nil {
+			// We don't have the show in our database yet
+			if err := c.show.Create(ctx, &showsSpotify[i]); err != nil {
+				return err
+			}
+		}
+
+		if err := c.show.CreateUser(ctx, &model.ShowUser{UserID: user.ID, ShowID: show.ID}); err != nil {
+			return err
+		}
+
+		showsDB = append(showsDB, show)
+	}
+
+	// Find shows we need to delete
+	for i := range showsDB {
+		if _, ok := utils.SliceFind(showsSpotify, func(s model.Show) bool { return s.Equal(*showsDB[i]) }); !ok {
+			// User no longer has this show saved
+			if err := c.show.DeleteUserByUserShow(ctx, model.ShowUser{UserID: user.ID, ShowID: showsDB[i].ID}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// showUpdate updates local show instances to match the spotify data
+func (c *client) showUpdate(ctx context.Context, user model.User) error {
+	showsDB, err := c.show.GetByUser(ctx, user.ID)
+	if err != nil {
+		return err
+	}
+
+	showsSpotifyAPI, err := c.api.ShowGetAll(ctx, user)
+	if err != nil {
+		return err
+	}
+	showsSpotify := utils.SliceMap(showsSpotifyAPI, func(s api.Show) model.Show { return s.ToModel() })
+
+	for i := range showsSpotify {
+		showDB, ok := utils.SliceFind(showsDB, func(s *model.Show) bool { return s.Equal(showsSpotify[i]) })
+		if !ok {
+			// Show not found
+			if err := c.show.Create(ctx, &showsSpotify[i]); err != nil {
+				return err
+			}
+
+			continue
+		}
+
+		if !(*showDB).EqualEntry(showsSpotify[i]) {
+			if err := c.show.Update(ctx, showsSpotify[i]); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
 
 func (c *client) showCheck(ctx context.Context, show *model.Show) error {
 	showDB, err := c.show.GetBySpotify(ctx, show.SpotifyID)

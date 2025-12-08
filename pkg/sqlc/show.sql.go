@@ -46,6 +46,38 @@ func (q *Queries) ShowGetBySpotify(ctx context.Context, spotifyID string) (Show,
 	return i, err
 }
 
+const showGetByUser = `-- name: ShowGetByUser :many
+SELECT s.id, s.spotify_id, s.episode_amount, s.name
+FROM shows s
+LEFT JOIN show_users su on su.show_id = s.id
+WHERE su.user_id = $1
+`
+
+func (q *Queries) ShowGetByUser(ctx context.Context, userID int32) ([]Show, error) {
+	rows, err := q.db.Query(ctx, showGetByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Show
+	for rows.Next() {
+		var i Show
+		if err := rows.Scan(
+			&i.ID,
+			&i.SpotifyID,
+			&i.EpisodeAmount,
+			&i.Name,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const showUpdate = `-- name: ShowUpdate :exec
 UPDATE shows
 SET name = $2, episode_amount = $3

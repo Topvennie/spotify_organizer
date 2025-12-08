@@ -34,6 +34,6 @@ func (d Directory) ToModel(userID, parentID int) *model.Directory {
 		UserID:    userID,
 		Name:      d.Name,
 		ParentID:  parentID,
-		Playlists: utils.SliceMap(d.Playlists, func(p Playlist) model.Playlist { return *p.ToModel(userID) }),
+		Playlists: utils.SliceMap(d.Playlists, func(p Playlist) model.Playlist { return *p.ToModel() }),
 	}
 }

@@ -80,7 +80,7 @@ type Playlist struct {
 	Images        []Image `json:"images"`
 }
 
-func (p *Playlist) ToModel(user model.User) model.Playlist {
+func (p *Playlist) ToModel() model.Playlist {
 	url := ""
 	maxWidth := -1
 	for _, image := range p.Images {
@@ -91,7 +91,6 @@ func (p *Playlist) ToModel(user model.User) model.Playlist {
 	}
 
 	return model.Playlist{
-		UserID:        user.ID,
 		SpotifyID:     p.SpotifyID,
 		OwnerUID:      p.Owner.UID,
 		Name:          p.Name,

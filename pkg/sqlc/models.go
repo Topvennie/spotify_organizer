@@ -61,6 +61,12 @@ type Album struct {
 	Popularity  int32
 }
 
+type AlbumUser struct {
+	ID      int32
+	UserID  int32
+	AlbumID int32
+}
+
 type Artist struct {
 	ID         int32
 	SpotifyID  string
@@ -103,7 +109,6 @@ type Link struct {
 
 type Playlist struct {
 	ID            int32
-	UserID        int32
 	SpotifyID     string
 	OwnerUid      string
 	Name          string
@@ -121,11 +126,23 @@ type PlaylistTrack struct {
 	TrackID    int32
 }
 
+type PlaylistUser struct {
+	ID         int32
+	UserID     int32
+	PlaylistID int32
+}
+
 type Show struct {
 	ID            int32
 	SpotifyID     string
 	EpisodeAmount int32
 	Name          string
+}
+
+type ShowUser struct {
+	ID     int32
+	UserID int32
+	ShowID int32
 }
 
 type Task struct {

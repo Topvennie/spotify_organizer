@@ -11,6 +11,8 @@ import (
 
 const (
 	taskPlaylistUID = "task-playlist"
+	taskAlbumUID    = "task-album"
+	taskShowUID     = "task-show"
 	taskTrackUID    = "task-track"
 	taskUserUID     = "task-user"
 	taskHistoryUID  = "task-history"
@@ -19,7 +21,7 @@ const (
 func (c *client) taskRegister() error {
 	if err := task.Manager.Add(context.Background(), task.NewTask(
 		taskPlaylistUID,
-		"Playlist: Synchronize",
+		"Playlist",
 		config.GetDefaultDuration("task.playlist_s", 6*60*60),
 		c.taskWrap(c.taskPlaylist),
 	)); err != nil {
@@ -27,8 +29,26 @@ func (c *client) taskRegister() error {
 	}
 
 	if err := task.Manager.Add(context.Background(), task.NewTask(
+		taskAlbumUID,
+		"Album",
+		config.GetDefaultDuration("task.album_s", 6*60*60),
+		c.taskWrap(c.taskAlbum),
+	)); err != nil {
+		return err
+	}
+
+	if err := task.Manager.Add(context.Background(), task.NewTask(
+		taskShowUID,
+		"Show",
+		config.GetDefaultDuration("task.show_s", 6*60*60),
+		c.taskWrap(c.taskShow),
+	)); err != nil {
+		return err
+	}
+
+	if err := task.Manager.Add(context.Background(), task.NewTask(
 		taskTrackUID,
-		"Track: Synchronize & update playlists by links",
+		"Track",
 		config.GetDefaultDuration("task.track_s", 60*60),
 		c.taskWrap(c.taskTrack),
 	)); err != nil {
@@ -37,8 +57,8 @@ func (c *client) taskRegister() error {
 
 	if err := task.Manager.Add(context.Background(), task.NewTask(
 		taskUserUID,
-		"User: Synchronize",
-		config.GetDefaultDuration("task.user_s", 24*60*60),
+		"User",
+		config.GetDefaultDuration("task.user_s", 6*60*60),
 		c.taskWrap(c.taskUser),
 	)); err != nil {
 		return err
@@ -46,7 +66,7 @@ func (c *client) taskRegister() error {
 
 	if err := task.Manager.Add(context.Background(), task.NewTask(
 		taskHistoryUID,
-		"History: Synchronize",
+		"History",
 		config.GetDefaultDuration("task.history_s", 10*60),
 		c.taskWrap(c.taskHistory),
 	)); err != nil {
@@ -74,9 +94,12 @@ func (c *client) taskWrap(fn func(context.Context, model.User) (string, error)) 
 }
 
 func (c *client) taskPlaylist(ctx context.Context, user model.User) (string, error) {
-	msg1, err := c.playlistSync(ctx, user)
-	if err != nil {
+	if err := c.playlistSync(ctx, user); err != nil {
 		return "", fmt.Errorf("synchronize playlists %w", err)
+	}
+
+	if err := c.playlistUpdate(ctx, user); err != nil {
+		return "", fmt.Errorf("update playlists %w", err)
 	}
 
 	msg2, err := c.playlistCoverSync(ctx, user)
@@ -84,7 +107,31 @@ func (c *client) taskPlaylist(ctx context.Context, user model.User) (string, err
 		return "", fmt.Errorf("synchronize playlist covers %w", err)
 	}
 
-	return fmt.Sprintf("%s | %s", msg1, msg2), nil
+	return msg2, nil
+}
+
+func (c *client) taskAlbum(ctx context.Context, user model.User) (string, error) {
+	if err := c.albumSync(ctx, user); err != nil {
+		return "", fmt.Errorf("synchronize albums %w", err)
+	}
+
+	if err := c.albumUpdate(ctx, user); err != nil {
+		return "", fmt.Errorf("update albums %w", err)
+	}
+
+	return "", nil
+}
+
+func (c *client) taskShow(ctx context.Context, user model.User) (string, error) {
+	if err := c.showSync(ctx, user); err != nil {
+		return "", fmt.Errorf("synchronize shows %w", err)
+	}
+
+	if err := c.showUpdate(ctx, user); err != nil {
+		return "", fmt.Errorf("update shows %w", err)
+	}
+
+	return "", nil
 }
 
 func (c *client) taskTrack(ctx context.Context, user model.User) (string, error) {

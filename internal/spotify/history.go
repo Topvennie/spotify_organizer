@@ -79,7 +79,7 @@ func (c *client) historyOneSync(ctx context.Context, user model.User, history ap
 		if err != nil {
 			return err
 		}
-		playlistModel := playlist.ToModel(user)
+		playlistModel := playlist.ToModel()
 		if err := c.playlistCheck(ctx, &playlistModel); err != nil {
 			return err
 		}

@@ -53,6 +53,39 @@ func (q *Queries) AlbumGetBySpotify(ctx context.Context, spotifyID string) (Albu
 	return i, err
 }
 
+const albumGetByUser = `-- name: AlbumGetByUser :many
+SELECT a.id, a.spotify_id, a.name, a.track_amount, a.popularity
+FROM albums a
+LEFT JOIN album_users au on au.album_id = a.id
+WHERE au.user_id = $1
+`
+
+func (q *Queries) AlbumGetByUser(ctx context.Context, userID int32) ([]Album, error) {
+	rows, err := q.db.Query(ctx, albumGetByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Album
+	for rows.Next() {
+		var i Album
+		if err := rows.Scan(
+			&i.ID,
+			&i.SpotifyID,
+			&i.Name,
+			&i.TrackAmount,
+			&i.Popularity,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const albumUpdate = `-- name: AlbumUpdate :exec
 UPDATE albums
 SET name = $2, track_amount = $3, popularity = $4

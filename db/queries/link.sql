@@ -3,7 +3,8 @@ SELECT l.*
 FROM links l
 LEFT JOIN directories d ON d.id = l.source_directory_id
 LEFT JOIN playlists p ON p.id = l.source_playlist_id
-WHERE d.user_id = $1 OR p.user_id = $1;
+LEFT JOIN playlist_users pu ON pu.playlist_id = p.id
+WHERE d.user_id = $1 OR pu.user_id = $1;
 
 -- name: LinkCreate :one
 INSERT INTO links (source_directory_id, source_playlist_id, target_directory_id, target_playlist_id)

@@ -12,13 +12,12 @@ import (
 )
 
 const playlistCreate = `-- name: PlaylistCreate :one
-INSERT INTO playlists (user_id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+INSERT INTO playlists (spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id
 `
 
 type PlaylistCreateParams struct {
-	UserID        int32
 	SpotifyID     string
 	OwnerUid      string
 	Name          string
@@ -32,7 +31,6 @@ type PlaylistCreateParams struct {
 
 func (q *Queries) PlaylistCreate(ctx context.Context, arg PlaylistCreateParams) (int32, error) {
 	row := q.db.QueryRow(ctx, playlistCreate,
-		arg.UserID,
 		arg.SpotifyID,
 		arg.OwnerUid,
 		arg.Name,
@@ -59,7 +57,7 @@ func (q *Queries) PlaylistDelete(ctx context.Context, id int32) error {
 }
 
 const playlistGet = `-- name: PlaylistGet :one
-SELECT id, user_id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url
+SELECT id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url
 FROM playlists
 WHERE id = $1
 `
@@ -69,7 +67,6 @@ func (q *Queries) PlaylistGet(ctx context.Context, id int32) (Playlist, error) {
 	var i Playlist
 	err := row.Scan(
 		&i.ID,
-		&i.UserID,
 		&i.SpotifyID,
 		&i.OwnerUid,
 		&i.Name,
@@ -84,7 +81,7 @@ func (q *Queries) PlaylistGet(ctx context.Context, id int32) (Playlist, error) {
 }
 
 const playlistGetBySpotify = `-- name: PlaylistGetBySpotify :one
-SELECT id, user_id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url
+SELECT id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url
 FROM playlists
 WHERE spotify_id = $1
 `
@@ -94,7 +91,6 @@ func (q *Queries) PlaylistGetBySpotify(ctx context.Context, spotifyID string) (P
 	var i Playlist
 	err := row.Scan(
 		&i.ID,
-		&i.UserID,
 		&i.SpotifyID,
 		&i.OwnerUid,
 		&i.Name,
@@ -109,10 +105,11 @@ func (q *Queries) PlaylistGetBySpotify(ctx context.Context, spotifyID string) (P
 }
 
 const playlistGetByUserWithOwner = `-- name: PlaylistGetByUserWithOwner :many
-SELECT p.id, p.user_id, p.spotify_id, p.owner_uid, p.name, p.description, p.public, p.track_amount, p.collaborative, p.cover_id, p.cover_url, u.id, u.uid, u.name, u.display_name, u.email
+SELECT p.id, p.spotify_id, p.owner_uid, p.name, p.description, p.public, p.track_amount, p.collaborative, p.cover_id, p.cover_url, u.id, u.uid, u.name, u.display_name, u.email
 FROM playlists p
+LEFT JOIN playlist_users pu ON pu.playlist_id = p.id
 LEFT JOIN users u ON u.uid = p.owner_uid
-WHERE p.user_id = $1
+WHERE pu.user_id = $1
 ORDER BY p.name
 `
 
@@ -132,7 +129,6 @@ func (q *Queries) PlaylistGetByUserWithOwner(ctx context.Context, userID int32) 
 		var i PlaylistGetByUserWithOwnerRow
 		if err := rows.Scan(
 			&i.Playlist.ID,
-			&i.Playlist.UserID,
 			&i.Playlist.SpotifyID,
 			&i.Playlist.OwnerUid,
 			&i.Playlist.Name,

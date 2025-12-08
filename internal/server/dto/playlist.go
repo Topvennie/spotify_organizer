@@ -30,10 +30,9 @@ func PlaylistDTO(playlist *model.Playlist, user *model.User) Playlist {
 	}
 }
 
-func (p Playlist) ToModel(userID int) *model.Playlist {
+func (p Playlist) ToModel() *model.Playlist {
 	return &model.Playlist{
 		ID:            p.ID,
-		UserID:        userID,
 		SpotifyID:     p.SpotifyID,
 		OwnerUID:      p.Owner.UID,
 		Name:          p.Name,

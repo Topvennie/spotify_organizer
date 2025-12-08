@@ -12,84 +12,99 @@ import (
 	"github.com/topvennie/sortifyr/pkg/utils"
 )
 
-func (c *client) playlistSync(ctx context.Context, user model.User) (string, error) {
+func (c *client) playlistSync(ctx context.Context, user model.User) error {
 	playlistsDB, err := c.playlist.GetByUserPopulated(ctx, user.ID)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	playlistsSpotifyAPI, err := c.api.PlaylistGetAll(ctx, user)
 	if err != nil {
-		return "", err
+		return err
 	}
-	playlistsSpotify := utils.SliceMap(playlistsSpotifyAPI, func(p api.Playlist) model.Playlist { return p.ToModel(user) })
+	playlistsSpotify := utils.SliceMap(playlistsSpotifyAPI, func(p api.Playlist) model.Playlist { return p.ToModel() })
 
-	toCreate := make([]model.Playlist, 0)
-	toUpdate := make([]model.Playlist, 0)
-	toDelete := make([]model.Playlist, 0)
-
-	// Find the playlists that need to be created or updated
+	// Find playlists we need to create
 	for i := range playlistsSpotify {
-		playlistDB, ok := utils.SliceFind(playlistsDB, func(p *model.Playlist) bool { return p.Equal(playlistsSpotify[i]) })
-		if !ok {
-			// Playlist doesn't exist yet
-			// Create it
-			toCreate = append(toCreate, playlistsSpotify[i])
+		if _, ok := utils.SliceFind(playlistsDB, func(p *model.Playlist) bool { return p.Equal(playlistsSpotify[i]) }); ok {
 			continue
 		}
 
-		// Playlist already exist
-		// But is it still completely the same?
-		if !(*playlistDB).EqualEntry(playlistsSpotify[i]) {
-			// Not completely the same anymore
-			// Update it
-			toUpdate = append(toUpdate, playlistsSpotify[i])
+		// User doesn't have this playlist yet
+		playlist, err := c.playlist.GetBySpotify(ctx, playlistsSpotify[i].SpotifyID)
+		if err != nil {
+			return err
+		}
+		if playlist == nil {
+			// We don't have the playlist in our database yet
+			if err := c.userCheck(ctx, playlistsSpotify[i].OwnerUID); err != nil {
+				return err
+			}
+			if err := c.playlist.Create(ctx, &playlistsSpotify[i]); err != nil {
+				return err
+			}
+			playlist = &playlistsSpotify[i]
+		}
+
+		if err := c.playlist.CreateUser(ctx, &model.PlaylistUser{UserID: user.ID, PlaylistID: playlist.ID}); err != nil {
+			return err
+		}
+
+		playlistsDB = append(playlistsDB, playlist)
+
+	}
+
+	// Find playlists we need to delete
+	for i := range playlistsDB {
+		if _, ok := utils.SliceFind(playlistsSpotify, func(p model.Playlist) bool { return p.Equal(*playlistsDB[i]) }); !ok {
+			// User no longer has this playlist saved
+			if err := c.playlist.DeleteUserByUserPlaylist(ctx, model.PlaylistUser{UserID: user.ID, PlaylistID: playlistsDB[i].ID}); err != nil {
+				return err
+			}
 		}
 	}
 
-	// Do the database operations
-	for i := range toCreate {
-		if err := c.userCheck(ctx, toCreate[i].OwnerUID); err != nil {
-			return "", err
-		}
-		if err := c.playlist.Create(ctx, &toCreate[i]); err != nil {
-			return "", err
-		}
-	}
+	return nil
+}
 
-	for i := range toUpdate {
-		if err := c.userCheck(ctx, toUpdate[i].OwnerUID); err != nil {
-			return "", err
-		}
-		if err := c.playlist.Update(ctx, toUpdate[i]); err != nil {
-			return "", err
-		}
-	}
-
-	// New and updated entries are now in the database
-	// Let's bring our local copy up to date
-	playlistsDB, err = c.playlist.GetByUserPopulated(ctx, user.ID)
+// playlistUpdate updates local playlist instances to match the spotify data
+func (c *client) playlistUpdate(ctx context.Context, user model.User) error {
+	playlistsDB, err := c.playlist.GetByUserPopulated(ctx, user.ID)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	// Find the playlists that need to be deleted
-	for _, playlistDB := range playlistsDB {
-		_, ok := utils.SliceFind(playlistsSpotify, func(p model.Playlist) bool { return p.SpotifyID == playlistDB.SpotifyID })
+	playlistsSpotifyAPI, err := c.api.PlaylistGetAll(ctx, user)
+	if err != nil {
+		return err
+	}
+	playlistsSpotify := utils.SliceMap(playlistsSpotifyAPI, func(p api.Playlist) model.Playlist { return p.ToModel() })
+
+	for i := range playlistsSpotify {
+		playlistDB, ok := utils.SliceFind(playlistsDB, func(p *model.Playlist) bool { return p.Equal(playlistsSpotify[i]) })
 		if !ok {
-			// Playlist no longer exists in the user's account
-			// So delete it
-			toDelete = append(toDelete, *playlistDB)
+			// Playlist not found
+			if err := c.userCheck(ctx, playlistsSpotify[i].OwnerUID); err != nil {
+				return err
+			}
+			if err := c.playlist.Create(ctx, &playlistsSpotify[i]); err != nil {
+				return err
+			}
+
+			continue
+		}
+
+		if !(*playlistDB).EqualEntry(playlistsSpotify[i]) {
+			if err := c.userCheck(ctx, playlistsSpotify[i].OwnerUID); err != nil {
+				return err
+			}
+			if err := c.playlist.Update(ctx, playlistsSpotify[i]); err != nil {
+				return err
+			}
 		}
 	}
 
-	for i := range toDelete {
-		if err := c.playlist.Delete(ctx, toDelete[i].ID); err != nil {
-			return "", err
-		}
-	}
-
-	return fmt.Sprintf("Created: %d | Updated: %d | Deleted: %d", len(toCreate), len(toUpdate), len(toDelete)), nil
+	return nil
 }
 
 func (c *client) playlistCoverSync(ctx context.Context, user model.User) (string, error) {

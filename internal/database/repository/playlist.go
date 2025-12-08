@@ -65,7 +65,6 @@ func (p *Playlist) GetByUserPopulated(ctx context.Context, userID int) ([]*model
 
 func (p *Playlist) Create(ctx context.Context, playlist *model.Playlist) error {
 	id, err := p.repo.queries(ctx).PlaylistCreate(ctx, sqlc.PlaylistCreateParams{
-		UserID:        int32(playlist.UserID),
 		SpotifyID:     playlist.SpotifyID,
 		OwnerUid:      playlist.OwnerUID,
 		Name:          playlist.Name,
@@ -95,6 +94,20 @@ func (p *Playlist) CreateTrack(ctx context.Context, track *model.PlaylistTrack) 
 	}
 
 	track.ID = int(id)
+
+	return nil
+}
+
+func (p *Playlist) CreateUser(ctx context.Context, user *model.PlaylistUser) error {
+	id, err := p.repo.queries(ctx).PlaylistUserCreate(ctx, sqlc.PlaylistUserCreateParams{
+		UserID:     int32(user.UserID),
+		PlaylistID: int32(user.PlaylistID),
+	})
+	if err != nil {
+		return fmt.Errorf("create playlist user %+v | %w", *user, err)
+	}
+
+	user.ID = int(id)
 
 	return nil
 }
@@ -131,6 +144,17 @@ func (p *Playlist) DeleteTrackByPlaylistTrack(ctx context.Context, track model.P
 		TrackID:    int32(track.TrackID),
 	}); err != nil {
 		return fmt.Errorf("delete playlist track %+v | %w", track, err)
+	}
+
+	return nil
+}
+
+func (p *Playlist) DeleteUserByUserPlaylist(ctx context.Context, user model.PlaylistUser) error {
+	if err := p.repo.queries(ctx).PlaylistUserDeleteByUserPlaylist(ctx, sqlc.PlaylistUserDeleteByUserPlaylistParams{
+		UserID:     int32(user.UserID),
+		PlaylistID: int32(user.PlaylistID),
+	}); err != nil {
+		return fmt.Errorf("delete playlist user %+v | %w", user, err)
 	}
 
 	return nil

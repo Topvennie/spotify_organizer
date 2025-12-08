@@ -6,7 +6,6 @@ import (
 
 type Playlist struct {
 	ID            int
-	UserID        int
 	SpotifyID     string
 	OwnerUID      string
 	Name          string
@@ -75,5 +74,19 @@ func PlaylistTrackModel(p sqlc.PlaylistTrack) *PlaylistTrack {
 		ID:         int(p.ID),
 		PlaylistID: int(p.PlaylistID),
 		TrackID:    int(p.TrackID),
+	}
+}
+
+type PlaylistUser struct {
+	ID         int
+	UserID     int
+	PlaylistID int
+}
+
+func PlaylistUserModel(p sqlc.PlaylistUser) *PlaylistUser {
+	return &PlaylistUser{
+		ID:         int(p.ID),
+		UserID:     int(p.UserID),
+		PlaylistID: int(p.PlaylistID),
 	}
 }

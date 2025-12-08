@@ -11,13 +11,14 @@ WHERE spotify_id = $1;
 -- name: PlaylistGetByUserWithOwner :many
 SELECT sqlc.embed(p), sqlc.embed(u)
 FROM playlists p
+LEFT JOIN playlist_users pu ON pu.playlist_id = p.id
 LEFT JOIN users u ON u.uid = p.owner_uid
-WHERE p.user_id = $1
+WHERE pu.user_id = $1
 ORDER BY p.name;
 
 -- name: PlaylistCreate :one
-INSERT INTO playlists (user_id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+INSERT INTO playlists (spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id;
 
 -- name: PlaylistUpdateBySpotify :exec

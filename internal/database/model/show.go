@@ -18,6 +18,24 @@ func ShowModel(s sqlc.Show) *Show {
 	}
 }
 
+func (s *Show) Equal(s2 Show) bool {
+	return s.SpotifyID == s2.SpotifyID
+}
+
 func (s *Show) EqualEntry(s2 Show) bool {
 	return s.Name == s2.Name && s.EpisodeAmount == s2.EpisodeAmount
+}
+
+type ShowUser struct {
+	ID     int
+	UserID int
+	ShowID int
+}
+
+func ShowUserModel(s sqlc.ShowUser) *ShowUser {
+	return &ShowUser{
+		ID:     int(s.ID),
+		UserID: int(s.UserID),
+		ShowID: int(s.ShowID),
+	}
 }
