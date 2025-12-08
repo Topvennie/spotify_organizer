@@ -85,7 +85,7 @@ func (q *Queries) PlaylistGet(ctx context.Context, id int32) (Playlist, error) {
 const playlistGetBySpotify = `-- name: PlaylistGetBySpotify :one
 SELECT id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url, deleted_at
 FROM playlists
-WHERE spotify_id = $1 AND NOT deleted_at
+WHERE spotify_id = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) PlaylistGetBySpotify(ctx context.Context, spotifyID string) (Playlist, error) {
@@ -112,7 +112,7 @@ SELECT p.id, p.spotify_id, p.owner_uid, p.name, p.description, p.public, p.track
 FROM playlists p
 LEFT JOIN playlist_users pu ON pu.playlist_id = p.id
 LEFT JOIN users u ON u.uid = p.owner_uid
-WHERE pu.user_id = $1 AND NOT deleted_at
+WHERE pu.user_id = $1 AND deleted_at IS NULL
 ORDER BY p.name
 `
 
