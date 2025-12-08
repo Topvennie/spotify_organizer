@@ -120,6 +120,7 @@ type Playlist struct {
 	Collaborative bool
 	CoverID       pgtype.Text
 	CoverUrl      pgtype.Text
+	DeletedAt     pgtype.Timestamptz
 }
 
 type PlaylistTrack struct {

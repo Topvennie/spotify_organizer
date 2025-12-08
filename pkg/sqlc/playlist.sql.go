@@ -47,7 +47,8 @@ func (q *Queries) PlaylistCreate(ctx context.Context, arg PlaylistCreateParams) 
 }
 
 const playlistDelete = `-- name: PlaylistDelete :exec
-DELETE FROM playlists
+UPDATE playlists
+SET deleted_at = NOW()
 WHERE id = $1
 `
 
@@ -57,7 +58,7 @@ func (q *Queries) PlaylistDelete(ctx context.Context, id int32) error {
 }
 
 const playlistGet = `-- name: PlaylistGet :one
-SELECT id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url
+SELECT id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url, deleted_at
 FROM playlists
 WHERE id = $1
 `
@@ -76,14 +77,15 @@ func (q *Queries) PlaylistGet(ctx context.Context, id int32) (Playlist, error) {
 		&i.Collaborative,
 		&i.CoverID,
 		&i.CoverUrl,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const playlistGetBySpotify = `-- name: PlaylistGetBySpotify :one
-SELECT id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url
+SELECT id, spotify_id, owner_uid, name, description, public, track_amount, collaborative, cover_id, cover_url, deleted_at
 FROM playlists
-WHERE spotify_id = $1
+WHERE spotify_id = $1 AND NOT deleted_at
 `
 
 func (q *Queries) PlaylistGetBySpotify(ctx context.Context, spotifyID string) (Playlist, error) {
@@ -100,16 +102,17 @@ func (q *Queries) PlaylistGetBySpotify(ctx context.Context, spotifyID string) (P
 		&i.Collaborative,
 		&i.CoverID,
 		&i.CoverUrl,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const playlistGetByUserWithOwner = `-- name: PlaylistGetByUserWithOwner :many
-SELECT p.id, p.spotify_id, p.owner_uid, p.name, p.description, p.public, p.track_amount, p.collaborative, p.cover_id, p.cover_url, u.id, u.uid, u.name, u.display_name, u.email
+SELECT p.id, p.spotify_id, p.owner_uid, p.name, p.description, p.public, p.track_amount, p.collaborative, p.cover_id, p.cover_url, p.deleted_at, u.id, u.uid, u.name, u.display_name, u.email
 FROM playlists p
 LEFT JOIN playlist_users pu ON pu.playlist_id = p.id
 LEFT JOIN users u ON u.uid = p.owner_uid
-WHERE pu.user_id = $1
+WHERE pu.user_id = $1 AND NOT deleted_at
 ORDER BY p.name
 `
 
@@ -138,6 +141,7 @@ func (q *Queries) PlaylistGetByUserWithOwner(ctx context.Context, userID int32) 
 			&i.Playlist.Collaborative,
 			&i.Playlist.CoverID,
 			&i.Playlist.CoverUrl,
+			&i.Playlist.DeletedAt,
 			&i.User.ID,
 			&i.User.Uid,
 			&i.User.Name,

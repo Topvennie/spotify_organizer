@@ -6,14 +6,14 @@ WHERE id = $1;
 -- name: PlaylistGetBySpotify :one
 SELECT *
 FROM playlists
-WHERE spotify_id = $1;
+WHERE spotify_id = $1 AND NOT deleted_at;
 
 -- name: PlaylistGetByUserWithOwner :many
 SELECT sqlc.embed(p), sqlc.embed(u)
 FROM playlists p
 LEFT JOIN playlist_users pu ON pu.playlist_id = p.id
 LEFT JOIN users u ON u.uid = p.owner_uid
-WHERE pu.user_id = $1
+WHERE pu.user_id = $1 AND NOT deleted_at
 ORDER BY p.name;
 
 -- name: PlaylistCreate :one
@@ -27,5 +27,6 @@ SET owner_uid = $2, name = $3, description = $4, public = $5, track_amount = $6,
 WHERE spotify_id = $1;
 
 -- name: PlaylistDelete :exec
-DELETE FROM playlists
+UPDATE playlists
+SET deleted_at = NOW()
 WHERE id = $1;
