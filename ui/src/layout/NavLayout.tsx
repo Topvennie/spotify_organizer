@@ -1,7 +1,7 @@
 import { Avatar } from "@/components/atoms/Avatar";
 import { LinkButton } from "@/components/atoms/LinkButton";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { cn } from "@/lib/utils";
+import { cn, getBuildTime } from "@/lib/utils";
 import { ActionIcon, AppShell, Burger, Button, Divider, Group, ScrollArea, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { LinkProps } from "@tanstack/react-router";
@@ -63,6 +63,8 @@ export const NavLayout = ({ className, children, ...props }: Props) => {
 
   const [userExpanded, setUserExpanded] = useState(false)
 
+  const buildTime = getBuildTime()
+
   return (
     <AppShell
       header={{ height: { base: 60, lg: 0 } }}
@@ -102,6 +104,8 @@ export const NavLayout = ({ className, children, ...props }: Props) => {
                 <Button onClick={logout} radius="md" variant="subtle" pl={0} justify="start" className="text-muted">
                   Log out
                 </Button>
+                <Divider />
+                <p className="text-sm text-muted">{`Built: ${buildTime}`}</p>
               </>
             )}
           </Stack>
